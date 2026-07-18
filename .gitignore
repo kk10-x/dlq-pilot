@@ -9,3 +9,6 @@ node_modules/
 dist/
 build/
 .DS_Store
+data/
+.claude/
+node_modules/

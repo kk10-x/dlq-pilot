@@ -1,0 +1,24 @@
+# Real-broker demo: RabbitMQ + a chaos producer + a deliberately flaky consumer.
+# Failures pile up in *.dlq queues for dlq-pilot to triage.
+#
+#   docker compose up -d
+#   RABBITMQ_URL=amqp://guest:guest@localhost:5672/ uvicorn app.main:app --port 8000
+services:
+  rabbitmq:
+    image: rabbitmq:3.13-management
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "check_running"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  chaos:
+    build: ./chaos
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+    environment:
+      RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672/
