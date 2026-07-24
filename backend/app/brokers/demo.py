@@ -57,8 +57,17 @@ class DemoAdapter:
 
     def __init__(self) -> None:
         self._queues: dict[str, list[DeadMessage]] = {}
-        self._rng = random.Random(_SEED)
         self._origin_of: dict[str, str] = {}
+        self._rng = random.Random(_SEED)
+        self.reseed()
+
+    def reseed(self) -> None:
+        """Reset back to the original deterministic seed data. The demo's periodic
+        refresh calls this so a public sandbox never drains to an empty dashboard
+        after visitors replay every queue."""
+        self._queues.clear()
+        self._origin_of.clear()
+        self._rng = random.Random(_SEED)
         self._seed()
 
     def _seed(self) -> None:

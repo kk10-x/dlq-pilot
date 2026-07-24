@@ -62,7 +62,7 @@ RABBITMQ_URL=amqp://guest:guest@localhost:5672/ uvicorn app.main:app --port 8000
 
 The chaos harness produces orders (half missing a required field), payments (a "gateway" that times out 60% of the time), and notifications that TTL-expire — so the DLQs fill up with realistically messy failures within a minute.
 
-Config (env vars): `RABBITMQ_URL`, `RABBITMQ_MGMT_URL`, `RABBITMQ_USER`, `RABBITMQ_PASSWORD`, `DLQ_PATTERN` (regex for what counts as a DLQ, default `(\.dlq$|\.dlx$|dead)`).
+Config (env vars): `RABBITMQ_URL`, `RABBITMQ_MGMT_URL`, `RABBITMQ_USER`, `RABBITMQ_PASSWORD`, `DLQ_PATTERN` (regex for what counts as a DLQ, default `(\.dlq$|\.dlx$|dead)`), `DEMO_RESEED_HOURS` (demo mode only — hours between automatic re-seeds of the sample dead letters so a shared/public sandbox never drains to empty; default `6`, `0` disables).
 
 **Caveats worth knowing** (this is a triage tool, not magic): peeking over AMQP is `basic.get` + requeue, which briefly holds messages and resets delivery order; replay identity-matches by message id with payload fallback, so setups without message ids fall back to payload equality. There is no auth in v1 — run it next to the broker, not on the internet.
 
@@ -72,7 +72,7 @@ Config (env vars): `RABBITMQ_URL`, `RABBITMQ_MGMT_URL`, `RABBITMQ_USER`, `RABBIT
 cd backend && .venv/Scripts/python -m pytest
 ```
 
-12 tests cover the fingerprint engine (normalization, header/payload signature extraction, group separation) and the full API flow in demo mode (grouping, filtering, dry-run invariance, replay draining with bounce-back accounting, validation, audit). The RabbitMQ adapter is exercised by the Docker chaos harness rather than unit tests.
+14 tests cover the fingerprint engine (normalization, header/payload signature extraction, group separation) and the full API flow in demo mode (grouping, filtering, dry-run invariance, replay draining with bounce-back accounting, validation, audit, and the demo re-seed). The RabbitMQ adapter is exercised by the Docker chaos harness rather than unit tests.
 
 ## Why I built this
 
