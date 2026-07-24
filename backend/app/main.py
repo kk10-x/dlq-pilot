@@ -5,6 +5,7 @@ Run:  uvicorn app.main:app --port 8000        (demo mode, zero setup)
 """
 from __future__ import annotations
 
+import asyncio
 from collections import defaultdict
 from contextlib import asynccontextmanager
 from pathlib import Path
@@ -21,15 +22,30 @@ from .schemas import DeadMessage, FingerprintGroup, ReplayRequest, ReplayResult
 settings = Settings()
 
 
+async def _demo_reseed_loop(broker: DemoAdapter, hours: float) -> None:
+    """Periodically restore the demo's seed data so the public sandbox stays populated."""
+    interval = hours * 3600
+    while True:
+        await asyncio.sleep(interval)
+        broker.reseed()
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    reseed_task: asyncio.Task | None = None
     if settings.mode == "rabbitmq":
         from .brokers.rabbitmq import RabbitMQAdapter  # deferred: aio_pika only needed here
         app.state.broker = RabbitMQAdapter(settings)
     else:
         app.state.broker = DemoAdapter()
+        if settings.demo_reseed_hours > 0:
+            reseed_task = asyncio.create_task(
+                _demo_reseed_loop(app.state.broker, settings.demo_reseed_hours)
+            )
     app.state.audit = AuditLog(settings.audit_db_path)
     yield
+    if reseed_task is not None:
+        reseed_task.cancel()
     await app.state.broker.close()
     app.state.audit.close()
 

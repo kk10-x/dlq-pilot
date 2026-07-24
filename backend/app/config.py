@@ -18,6 +18,9 @@ class Settings:
     # Which queues count as DLQs (regex against the queue name).
     dlq_pattern: str = field(default_factory=lambda: os.getenv("DLQ_PATTERN", r"(\.dlq$|\.dlx$|dead)"))
     audit_db_path: str = field(default_factory=lambda: os.getenv("AUDIT_DB", _DEFAULT_AUDIT_DB))
+    # Demo mode only: hours between automatic re-seeds of the sample dead letters.
+    # 0 disables the refresh. Ignored when a real RABBITMQ_URL is configured.
+    demo_reseed_hours: float = field(default_factory=lambda: float(os.getenv("DEMO_RESEED_HOURS", "6")))
 
     @property
     def mode(self) -> str:
