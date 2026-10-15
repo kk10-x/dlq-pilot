@@ -7,15 +7,15 @@ async function get<T>(url: string): Promise<T> {
 }
 
 export const api = {
-  health: () => get<{ status: string; mode: string }>("/api/health"),
-  queues: () => get<QueueInfo[]>("/api/queues"),
-  groups: (queue: string) => get<FingerprintGroup[]>(`/api/queues/${encodeURIComponent(queue)}/groups`),
+  health: () => get<{ status: string; mode: string }>("api/health"),
+  queues: () => get<QueueInfo[]>("api/queues"),
+  groups: (queue: string) => get<FingerprintGroup[]>(`api/queues/${encodeURIComponent(queue)}/groups`),
   messages: (queue: string, fingerprint?: string) =>
     get<DeadMessage[]>(
-      `/api/queues/${encodeURIComponent(queue)}/messages` +
+      `api/queues/${encodeURIComponent(queue)}/messages` +
         (fingerprint ? `?fingerprint=${encodeURIComponent(fingerprint)}` : ""),
     ),
-  audit: () => get<AuditEntry[]>("/api/audit"),
+  audit: () => get<AuditEntry[]>("api/audit"),
   replay: async (body: {
     queue: string;
     fingerprint?: string | null;
@@ -23,7 +23,7 @@ export const api = {
     rate_per_sec: number;
     dry_run: boolean;
   }): Promise<ReplayResult> => {
-    const r = await fetch("/api/replay", {
+    const r = await fetch("api/replay", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(body),
